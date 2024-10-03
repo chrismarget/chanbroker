@@ -88,11 +88,20 @@ func (b *Broker[T]) Subscribe(blocking bool, buffSize int) (<-chan T, func()) {
 	}
 
 	cancelFunc := func() {
-		b.mutex.Lock()
-		defer b.mutex.Unlock()
+		go func() {
+			b.mutex.Lock()
+			defer b.mutex.Unlock()
 
-		close(b.subscriptions[subscriberId].ch)
-		delete(b.subscriptions, subscriberId)
+			subscriber, ok := b.subscriptions[subscriberId]
+			if !ok {
+				// subscriber has been deleted (input channel closure?)
+				// before the subscriber got around to requesting it.
+				return
+			}
+
+			close(subscriber.ch)
+			delete(b.subscriptions, subscriberId)
+		}()
 	}
 
 	return b.subscriptions[subscriberId].ch, cancelFunc
