@@ -16,16 +16,6 @@ type Broker[T interface{}] struct {
 	subscriptions    map[uint]subscription[T]
 }
 
-// Drain reads from the input channel until it closes. The returned
-// value indicates the number of messages drained from the channel.
-func (b *Broker[T]) Drain() int {
-	var i int
-	for range b.input {
-		i++
-	}
-	return i
-}
-
 // Start causes the broker to begin reading messages and distributing them
 // to subscribers.
 func (b *Broker[T]) Start() {
